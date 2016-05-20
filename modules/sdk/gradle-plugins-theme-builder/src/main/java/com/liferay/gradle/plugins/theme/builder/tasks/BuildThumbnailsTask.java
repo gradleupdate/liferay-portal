@@ -12,62 +12,43 @@
  * details.
  */
 
-package com.liferay.gradle.plugins.tasks;
+package com.liferay.gradle.plugins.theme.builder.tasks;
 
-import com.liferay.gradle.plugins.LiferayOSGiPlugin;
-import com.liferay.gradle.plugins.util.FileUtil;
-import com.liferay.gradle.plugins.util.GradleUtil;
+import com.liferay.gradle.util.FileUtil;
+import com.liferay.gradle.util.GradleUtil;
+
+import groovy.lang.Closure;
 
 import java.io.File;
-import java.io.OutputStream;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.gradle.api.Action;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.OutputFiles;
-import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.process.internal.streams.SafeStreams;
-import org.gradle.util.GUtil;
+import org.gradle.api.tasks.SourceTask;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.process.JavaExecSpec;
 
 /**
  * @author Andrea Di Giorgi
  */
-public class BuildThumbnailsTask extends BasePortalToolsTask {
+public class BuildThumbnailsTask extends SourceTask {
 
-	public BuildThumbnailsTask() {
-		GradleUtil.setProperty(
-			this, LiferayOSGiPlugin.AUTO_CLEAN_PROPERTY_NAME, false);
-	}
-
-	@Override
-	public void exec() {
-		Iterable<File> files = getScreenshotFiles();
-
-		for (File file : files) {
-			super.setErrorOutput(SafeStreams.systemErr());
-			super.setStandardOutput(SafeStreams.systemOut());
-
-			doExec(getArgs(file));
+	@TaskAction
+	public void buildThumbnails() {
+		for (File file : getSource()) {
+			buildThumbnail(file);
 		}
 	}
 
-	@Override
-	public List<String> getArgs() {
-		List<String> args = new ArrayList<>();
-
-		args.add("thumbnail.height=" + getHeight());
-		args.add("thumbnail.width=" + getWidth());
-		args.add("thumbnail.overwrite=" + isOverwrite());
-
-		return args;
+	@InputFiles
+	public FileCollection getClasspath() {
+		return _classpath;
 	}
 
 	@Input
@@ -75,46 +56,23 @@ public class BuildThumbnailsTask extends BasePortalToolsTask {
 		return _height;
 	}
 
-	public FileCollection getImageDirs() {
-		return project.files(_imageDirs);
+	public Closure<?> getJavaExecClosure() {
+		return _javaExecClosure;
 	}
 
-	@Override
-	public String getMain() {
-		return "com.liferay.portal.tools.ThumbnailBuilder";
-	}
-
-	@InputFiles
-	@SkipWhenEmpty
-	public FileCollection getScreenshotFiles() {
-		List<FileTree> fileTrees = new ArrayList<>();
-
-		for (File imagesDir : getImageDirs()) {
-			Map<String, Object> args = new HashMap<>();
-
-			args.put("dir", imagesDir);
-			args.put("include", "**/screenshot.png");
-
-			FileTree fileTree = project.fileTree(args);
-
-			fileTrees.add(fileTree);
-		}
-
-		return project.files(fileTrees.toArray());
+	public String getThumbnailFileName() {
+		return GradleUtil.toString(_thumbnailFileName);
 	}
 
 	@OutputFiles
-	public FileCollection getThumbnailFiles() {
+	public Iterable<File> getThumbnailFiles() {
 		List<File> thumbnailFiles = new ArrayList<>();
 
-		for (File screenshotFile : getScreenshotFiles()) {
-			File thumbnailFile = new File(
-				screenshotFile.getParentFile(), "thumbnail.png");
-
-			thumbnailFiles.add(thumbnailFile);
+		for (File file : getSource()) {
+			thumbnailFiles.add(getThumbnailFile(file));
 		}
 
-		return project.files(thumbnailFiles);
+		return thumbnailFiles;
 	}
 
 	@Input
@@ -122,81 +80,79 @@ public class BuildThumbnailsTask extends BasePortalToolsTask {
 		return _width;
 	}
 
-	public BuildThumbnailsTask imageDirs(Iterable<Object> imageDirs) {
-		GUtil.addToCollection(_imageDirs, imageDirs);
-
-		return this;
-	}
-
-	public BuildThumbnailsTask imageDirs(Object... imageDirs) {
-		return imageDirs(Arrays.asList(imageDirs));
-	}
-
 	@Input
 	public boolean isOverwrite() {
 		return _overwrite;
 	}
 
-	@Override
-	public JavaExec setErrorOutput(OutputStream outputStream) {
-		throw new UnsupportedOperationException();
+	public void setClasspath(FileCollection classpath) {
+		_classpath = classpath;
 	}
 
 	public void setHeight(int height) {
 		_height = height;
 	}
 
-	public void setImageDirs(Iterable<Object> imageDirs) {
-		_imageDirs.clear();
-
-		imageDirs(imageDirs);
+	public void setJavaExecClosure(Closure<?> javaExecClosure) {
+		_javaExecClosure = javaExecClosure;
 	}
 
 	public void setOverwrite(boolean overwrite) {
 		_overwrite = overwrite;
 	}
 
-	@Override
-	public JavaExec setStandardOutput(OutputStream outputStream) {
-		throw new UnsupportedOperationException();
+	public void setThumbnailFileName(Object thumbnailFileName) {
+		_thumbnailFileName = thumbnailFileName;
 	}
 
 	public void setWidth(int width) {
 		_width = width;
 	}
 
-	@Override
-	protected void addDependencies() {
-		super.addDependencies();
+	protected void buildThumbnail(final File file) {
+		Project project = getProject();
 
-		addDependency("com.liferay", "org.monte", "0.7.7");
+		project.javaexec(
+			new Action<JavaExecSpec>() {
+
+				@Override
+				public void execute(JavaExecSpec javaExecSpec) {
+					javaExecSpec.args("thumbnail.height=" + getHeight());
+					javaExecSpec.args(
+						"thumbnail.original.file=" +
+							FileUtil.relativize(
+								file, javaExecSpec.getWorkingDir()));
+					javaExecSpec.args("thumbnail.overwrite=" + isOverwrite());
+					javaExecSpec.args(
+						"thumbnail.thumbnail.file=" +
+							FileUtil.relativize(
+								getThumbnailFile(file),
+								javaExecSpec.getWorkingDir()));
+					javaExecSpec.args("thumbnail.width=" + getWidth());
+
+					javaExecSpec.setClasspath(getClasspath());
+					javaExecSpec.setMain(
+						"com.liferay.portal.tools.ThumbnailBuilder");
+
+					Closure<?> closure = getJavaExecClosure();
+
+					if (closure != null) {
+						closure.call(javaExecSpec);
+					}
+				}
+
+			});
 	}
 
-	protected List<String> getArgs(File screenshotFile) {
-		List<String> args = getArgs();
-
-		args.add(
-			"thumbnail.original.file=" +
-				FileUtil.getAbsolutePath(screenshotFile));
-
-		File thumbnailFile = new File(
-			screenshotFile.getParentFile(), "thumbnail.png");
-
-		args.add(
-			"thumbnail.thumbnail.file=" +
-				FileUtil.getAbsolutePath(thumbnailFile));
-
-		return args;
+	protected File getThumbnailFile(File file) {
+		return new File(file.getParentFile(), getThumbnailFileName());
 	}
 
-	@Override
-	protected String getToolName() {
-		return "ThumbnailBuilder";
-	}
-
+	private FileCollection _classpath;
 	private int _height = 120;
-	private final List<Object> _imageDirs = new ArrayList<>();
+	private Closure<?> _javaExecClosure;
 	private boolean _overwrite;
+	private Object _thumbnailFileName = "thumbnail.png";
 	private int _width = 160;
 
 }
