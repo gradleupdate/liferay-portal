@@ -49,10 +49,6 @@ import org.gradle.util.GUtil;
  */
 public class CompileThemeTask extends DefaultTask {
 
-	public CompileThemeTask() {
-		_project = getProject();
-	}
-
 	@TaskAction
 	public void compileTheme() throws Exception {
 		copyThemeParent();
@@ -63,7 +59,7 @@ public class CompileThemeTask extends DefaultTask {
 	@InputDirectory
 	@Optional
 	public File getDiffsDir() {
-		return GradleUtil.toFile(_project, _diffsDir);
+		return GradleUtil.toFile(getProject(), _diffsDir);
 	}
 
 	@InputFiles
@@ -75,13 +71,15 @@ public class CompileThemeTask extends DefaultTask {
 	@InputDirectory
 	@Optional
 	public File getFrontendThemesWebDir() {
-		return GradleUtil.toFile(_project, _frontendThemesWebDir);
+		return GradleUtil.toFile(getProject(), _frontendThemesWebDir);
 	}
 
 	@OutputDirectories
 	public FileCollection getThemeDirs() {
+		Project project = getProject();
+
 		if (getDiffsDir() == null) {
-			return _project.files();
+			return project.files();
 		}
 
 		List<File> themeDirs = new ArrayList<>(_THEME_DIR_NAMES.length);
@@ -94,7 +92,7 @@ public class CompileThemeTask extends DefaultTask {
 			themeDirs.add(dir);
 		}
 
-		return _project.files(themeDirs);
+		return project.files(themeDirs);
 	}
 
 	@Input
@@ -113,17 +111,19 @@ public class CompileThemeTask extends DefaultTask {
 		}
 
 		if (_themeParentProject == null) {
-			File themeParentDir = _project.file(themeParent);
+			Project project = getProject();
+
+			File themeParentDir = project.file(themeParent);
 
 			_themeParentProject = GradleUtil.getProject(
-				_project.getRootProject(), themeParentDir);
+				project.getRootProject(), themeParentDir);
 		}
 
 		return _themeParentProject;
 	}
 
 	public File getThemeRootDir() {
-		return GradleUtil.toFile(_project, _themeRootDir);
+		return GradleUtil.toFile(getProject(), _themeRootDir);
 	}
 
 	@Input
@@ -175,6 +175,8 @@ public class CompileThemeTask extends DefaultTask {
 			return;
 		}
 
+		Project project = getProject();
+
 		Closure<Void> closure = new Closure<Void>(null) {
 
 			@SuppressWarnings("unused")
@@ -185,7 +187,7 @@ public class CompileThemeTask extends DefaultTask {
 
 		};
 
-		_project.copy(closure);
+		project.copy(closure);
 	}
 
 	protected void copyPortalThemeDir(
@@ -198,6 +200,8 @@ public class CompileThemeTask extends DefaultTask {
 	protected void copyPortalThemeDir(
 			String theme, final String[] excludes, final String[] includes)
 		throws Exception {
+
+		final Project project = getProject();
 
 		final String prefix = theme + "/";
 
@@ -220,7 +224,7 @@ public class CompileThemeTask extends DefaultTask {
 
 			};
 
-			_project.copy(closure);
+			project.copy(closure);
 		}
 		else {
 			String jarPrefix = "META-INF/resources/" + prefix;
@@ -241,7 +245,7 @@ public class CompileThemeTask extends DefaultTask {
 						copySpec.exclude(prefixedExcludes);
 					}
 
-					copySpec.from(_project.zipTree(frontendThemeFile));
+					copySpec.from(project.zipTree(frontendThemeFile));
 					copySpec.include(prefixedIncludes);
 					copySpec.into(getThemeRootDir());
 					copySpec.setIncludeEmptyDirs(false);
@@ -249,7 +253,7 @@ public class CompileThemeTask extends DefaultTask {
 
 			};
 
-			_project.copy(closure);
+			project.copy(closure);
 		}
 	}
 
@@ -345,7 +349,6 @@ public class CompileThemeTask extends DefaultTask {
 	private Object _diffsDir;
 	private FileCollection _frontendThemeFiles;
 	private Object _frontendThemesWebDir;
-	private final Project _project;
 	private Object _themeParent;
 	private Project _themeParentProject;
 	private Object _themeRootDir;
