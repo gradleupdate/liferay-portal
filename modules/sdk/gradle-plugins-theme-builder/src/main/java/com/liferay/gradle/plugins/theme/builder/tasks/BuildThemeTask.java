@@ -47,7 +47,7 @@ import org.gradle.util.GUtil;
 /**
  * @author Andrea Di Giorgi
  */
-public class CompileThemeTask extends DefaultTask {
+public class BuildThemeTask extends DefaultTask {
 
 	@TaskAction
 	public void compileTheme() throws Exception {
@@ -158,13 +158,13 @@ public class CompileThemeTask extends DefaultTask {
 		themeTypes(themeTypes);
 	}
 
-	public CompileThemeTask themeTypes(Iterable<String> themeTypes) {
+	public BuildThemeTask themeTypes(Iterable<String> themeTypes) {
 		GUtil.addToCollection(_themeTypes, themeTypes);
 
 		return this;
 	}
 
-	public CompileThemeTask themeTypes(String... themeTypes) {
+	public BuildThemeTask themeTypes(String... themeTypes) {
 		return themeTypes(Arrays.asList(themeTypes));
 	}
 
