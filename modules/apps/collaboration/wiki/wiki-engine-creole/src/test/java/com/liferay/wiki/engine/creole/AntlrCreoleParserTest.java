@@ -15,6 +15,7 @@
 package com.liferay.wiki.engine.creole;
 
 import com.liferay.portal.kernel.util.StringPool;
+import com.liferay.wiki.engine.creole.internal.util.WikiEngineCreoleComponentProvider;
 import com.liferay.wiki.engine.creole.parser.ast.ASTNode;
 import com.liferay.wiki.engine.creole.parser.ast.BaseListNode;
 import com.liferay.wiki.engine.creole.parser.ast.BoldTextNode;
@@ -40,7 +41,6 @@ import com.liferay.wiki.engine.creole.parser.ast.table.TableHeaderNode;
 import com.liferay.wiki.engine.creole.parser.ast.table.TableNode;
 import com.liferay.wiki.engine.creole.parser.parser.Creole10Lexer;
 import com.liferay.wiki.engine.creole.parser.parser.Creole10Parser;
-import com.liferay.wiki.engine.creole.util.WikiEngineCreoleComponentProvider;
 import com.liferay.wiki.engine.creole.util.test.CreoleTestUtil;
 
 import java.io.IOException;

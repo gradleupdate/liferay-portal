@@ -15,7 +15,7 @@
 package com.liferay.wiki.engine.creole.parser.ast;
 
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
-import com.liferay.wiki.engine.creole.util.WikiEngineCreoleComponentProvider;
+import com.liferay.wiki.engine.creole.internal.util.WikiEngineCreoleComponentProvider;
 
 /**
  * @author Miguel Pastor
