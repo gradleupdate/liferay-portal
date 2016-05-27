@@ -49,6 +49,14 @@ import org.gradle.util.GUtil;
  */
 public class BuildThemeTask extends DefaultTask {
 
+	public static final String PORTAL_THEME_ADMIN = "admin";
+
+	public static final String PORTAL_THEME_CLASSIC = "classic";
+
+	public static final String PORTAL_THEME_STYLED = "_styled";
+
+	public static final String PORTAL_THEME_UNSTYLED = "_unstyled";
+
 	@TaskAction
 	public void compileTheme() throws Exception {
 		copyThemeParent();
@@ -264,14 +272,18 @@ public class BuildThemeTask extends DefaultTask {
 			return;
 		}
 
-		if (themeParent.equals("_styled") || themeParent.equals("_unstyled")) {
+		if (themeParent.equals(PORTAL_THEME_STYLED) ||
+			themeParent.equals(PORTAL_THEME_UNSTYLED)) {
+
 			copyThemeParentUnstyled();
 		}
 
-		if (themeParent.equals("_styled")) {
+		if (themeParent.equals(PORTAL_THEME_STYLED)) {
 			copyThemeParentStyled();
 		}
-		else if (themeParent.equals("admin") || themeParent.equals("classic")) {
+		else if (themeParent.equals(PORTAL_THEME_ADMIN) ||
+				 themeParent.equals(PORTAL_THEME_CLASSIC)) {
+
 			copyThemeParentPortal();
 		}
 	}
@@ -294,13 +306,13 @@ public class BuildThemeTask extends DefaultTask {
 
 	protected void copyThemeParentStyled() throws Exception {
 		copyPortalThemeDir(
-			"_styled",
+			PORTAL_THEME_STYLED,
 			new String[] {"**/*.css", "npm-debug.log", "package.json"}, "**");
 	}
 
 	protected void copyThemeParentUnstyled() throws Exception {
 		copyPortalThemeDir(
-			"_unstyled",
+			PORTAL_THEME_UNSTYLED,
 			new String[] {
 				"**/*.css", "npm-debug.log", "package.json", "templates/**"
 			},
@@ -320,7 +332,7 @@ public class BuildThemeTask extends DefaultTask {
 		String[] includes = StringUtil.prepend(
 			themeTypesArray, "templates/**/*.");
 
-		copyPortalThemeDir("_unstyled", excludes, includes);
+		copyPortalThemeDir(PORTAL_THEME_UNSTYLED, excludes, includes);
 	}
 
 	protected File getFrontendThemeFile(String theme) throws Exception {
@@ -339,7 +351,8 @@ public class BuildThemeTask extends DefaultTask {
 	}
 
 	private static final String[] _PORTAL_THEMES = {
-		"_styled", "_unstyled", "admin", "classic"
+		PORTAL_THEME_ADMIN, PORTAL_THEME_CLASSIC, PORTAL_THEME_STYLED,
+		PORTAL_THEME_UNSTYLED
 	};
 
 	private static final String[] _THEME_DIR_NAMES = {
