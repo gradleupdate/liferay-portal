@@ -189,6 +189,10 @@ public class BuildThemeTask extends DefaultTask {
 
 			@SuppressWarnings("unused")
 			public void doCall(CopySpec copySpec) {
+				for (String dirName : _THEME_DIR_NAMES) {
+					copySpec.include(dirName + "/");
+				}
+
 				copySpec.from(diffsDir);
 				copySpec.into(getThemeRootDir());
 			}
