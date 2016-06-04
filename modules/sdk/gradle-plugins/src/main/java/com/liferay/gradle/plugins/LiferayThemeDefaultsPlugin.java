@@ -30,6 +30,8 @@ import groovy.lang.Closure;
 
 import java.io.File;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.Action;
@@ -346,6 +348,17 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 		addTaskSkippedDependency(
 			executeGulpTask, taskCache,
 			themeProject.getPath() + ":" + JavaPlugin.CLASSES_TASK_NAME);
+
+		if (taskCache != null) {
+			Project project = executeGulpTask.getProject();
+
+			Map<String, Object> args = new HashMap<>();
+
+			args.put("dir", dir);
+			args.put("exclude", "**/.sass-cache/");
+
+			taskCache.testFile(project.fileTree(args));
+		}
 	}
 
 	protected void configureTasksExecuteGulp(
