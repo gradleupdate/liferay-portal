@@ -225,7 +225,9 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 
 		task.dependsOn(taskDependency);
 
-		taskCache.skipTaskDependency(taskDependency);
+		if (taskCache != null) {
+			taskCache.skipTaskDependency(taskDependency);
+		}
 	}
 
 	protected ReplaceRegexTask addTaskUpdateVersion(final Project project) {
@@ -349,7 +351,8 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 	protected void configureTasksExecuteGulp(
 		Project project, final Copy expandFrontendCSSCommonTask,
 		final Project frontendThemeStyledProject,
-		final Project frontendThemeUnstyledProject, final TaskCache taskCache) {
+		final Project frontendThemeUnstyledProject,
+		final TaskCache... taskCaches) {
 
 		TaskContainer taskContainer = project.getTasks();
 
@@ -359,10 +362,20 @@ public class LiferayThemeDefaultsPlugin implements Plugin<Project> {
 
 				@Override
 				public void execute(ExecuteGulpTask executeGulpTask) {
+					TaskCache executeGulpTaskCache = null;
+
+					for (TaskCache taskCache : taskCaches) {
+						if (executeGulpTask.equals(taskCache.getTask())) {
+							executeGulpTaskCache = taskCache;
+
+							break;
+						}
+					}
+
 					configureTaskExecuteGulp(
 						executeGulpTask, expandFrontendCSSCommonTask,
 						frontendThemeStyledProject,
-						frontendThemeUnstyledProject, taskCache);
+						frontendThemeUnstyledProject, executeGulpTaskCache);
 				}
 
 			});
